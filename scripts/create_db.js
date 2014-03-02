@@ -1,5 +1,5 @@
 var mongoose = require('lib/mongoose');
-var async = require('async');
+var async    = require('async');
 
 async.series([
     open,
