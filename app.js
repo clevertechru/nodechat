@@ -5,6 +5,7 @@ var config  = require('config');
 var log  = require('libs/logger')(module);
 
 var app = express();
+app.engine('ejs', require('ejs-locals'));
 app.set('port', config.get("port"));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -20,6 +21,11 @@ app.use(express.methodOverride());
 app.use(express.cookieParser('your secret here'));
 app.use(express.session());
 app.use(app.router);
+
+app.get('/', function(req, res, next) {
+    res.render('index');
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function(err, req, res, next) {
