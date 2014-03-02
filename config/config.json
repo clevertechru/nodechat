@@ -10,5 +10,14 @@
             },
             "debug" : true
         }
+    },
+    "session": {
+        "secret": "sdasda573s",
+        "key": "sid",
+        "cookie" : {
+            "path": "/",
+            "httpOnly": true,
+            "maxAge": null
+        }
     }
 }
