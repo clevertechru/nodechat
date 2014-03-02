@@ -1,8 +1,9 @@
-var express = require('express');
-var http    = require('http');
-var path    = require('path');
-var config  = require('config');
-var log  = require('libs/logger')(module);
+var express   = require('express');
+var http      = require('http');
+var path      = require('path');
+var config    = require('config');
+var log       = require('libs/logger')(module);
+var HttpError = require('error').HttpError;
 
 var app = express();
 app.engine('ejs', require('ejs-locals'));
@@ -20,35 +21,31 @@ app.use(express.bodyParser()); // req.body
 app.use(express.methodOverride());
 app.use(express.cookieParser('your secret here'));
 app.use(express.session());
-app.use(app.router);
+app.use(require('middleware/sendHttpError'));
 
-app.get('/', function(req, res, next) {
-    res.render('index');
-});
+app.use(app.router);
+require('routes')(app);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 app.use(function(err, req, res, next) {
-    // NODE_ENV = 'production'
-    if (app.get('env') == 'development') {
-        var errorHandler = express.errorHandler();
-        errorHandler(err, req, res, next);
+    if (typeof err == 'number') { // next(404);
+        err = new HttpError(err);
+    }
+
+    if (err instanceof HttpError) {
+        res.sendHttpError(err);
     } else {
-        res.send(500);
+        if (app.get('env') == 'development') {
+            express.errorHandler()(err, req, res, next);
+        } else {
+            log.error(err);
+            err = new HttpError(500);
+            res.sendHttpError(err);
+        }
     }
 });
-/*
-
- var routes = require('./routes');
- var user = require('./routes/user');
-
- // all environments
-
- app.get('/', routes.index);
- app.get('/users', user.list);
-
- */
-
 
 http.createServer(app).listen(config.get('port'), function(){
     log.info('Express server listening on port ' + config.get("port"));
